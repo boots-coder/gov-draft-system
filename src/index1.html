@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>政府约稿系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        .header {
+            background-color: #fff;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: #1890ff;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .nav {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-item {
+            text-decoration: none;
+            color: #333;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-item:hover {
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .table th {
+            background-color: #fafafa;
+            font-weight: 500;
+        }
+
+        .status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .status-pending {
+            background-color: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .status-approved {
+            background-color: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-rejected {
+            background-color: #fff1f0;
+            color: #f5222d;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #1890ff;
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: #40a9ff;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #40a9ff;
+            box-shadow: 0 0 0 2px rgba(24,144,255,0.2);
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .nav-item.active {
+            background-color: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1890ff;
+            margin: 0.5rem 0;
+        }
+
+        .user-profile {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 2rem;
+        }
+
+        .profile-sidebar {
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background-color: #f0f2f5;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #1890ff;
+        }
+
+        .profile-info {
+            text-align: left;
+        }
+
+        .chart-container {
+            height: 300px;
+            margin-top: 1rem;
+            background-color: #fff;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                display: none;
+            }
+            
+            .table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">政府约稿系统</div>
+        <nav class="nav">
+            <a href="#" class="nav-item active" onclick="switchPage('dashboard')">工作台</a>
+            <a href="#" class="nav-item" onclick="switchPage('articles')">稿件管理</a>
+            <a href="#" class="nav-item" onclick="switchPage('publish')">发布约稿</a>
+            <a href="#" class="nav-item" onclick="switchPage('profile')">个人中心</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- 工作台页面 -->
+        <div id="dashboard" class="page active">
+            <div class="card">
+                <h2>工作台</h2>
+                <div class="dashboard-stats">
+                    <div class="stat-card">
+                        <div>待审核稿件</div>
+                        <div class="stat-number">12</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>已发布稿件</div>
+                        <div class="stat-number">45</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>本月约稿</div>
+                        <div class="stat-number">8</div>
+                    </div>
+                    <div class="stat-card">
+                        <div>总稿件数</div>
+                        <div class="stat-number">127</div>
+                    </div>
+                </div>
+                <h3>近期活动</h3>
+                <div class="chart-container">
+                    <!-- 这里可以添加图表 -->
+                    <div style="text-align: center; padding-top: 120px; color: #999;">
+                        稿件统计图表
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 稿件管理页面 -->
+        <div id="articles" class="page">
+            <div class="card">
+                <h2>稿件管理</h2>
+                <div style="margin: 1rem 0;">
+                    <button class="btn btn-primary" onclick="showNewArticleForm()">发布约稿</button>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>标题</th>
+                            <th>类型</th>
+                            <th>状态</th>
+                            <th>截止日期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>关于城市规划的政策解读</td>
+                            <td>政策解读</td>
+                            <td><span class="status status-pending">待审核</span></td>
+                            <td>2024-12-31</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="viewArticle(1)">查看</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>2024年政府工作报告解读</td>
+                            <td>新闻</td>
+                            <td><span class="status status-approved">已通过</span></td>
+                            <td>2024-12-25</td>
+                            <td>
+                                <button class="btn btn-primary" onclick="viewArticle(2)">查看</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 发布约稿页面 -->
+        <div id="publish" class="page">
+            <div class="card">
+                <h2>发布约稿</h2>
+                <form onsubmit="submitArticle(event)">
+                    <div class="form-group">
+                        <label class="form-label">标题</label>
+                        <input type="text" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">类型</label>
+                        <select class="form-control" required>
+                            <option value="news">新闻</option>
+                            <option value="policy">政策解读</option>
+                            <option value="announcement">公告</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">内容要求</label>
+                        <textarea class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">字数要求</label>
+                        <input type="number" class="form-control" min="1000" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">截止日期</label>
+                        <input type="date" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">发布</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 个人中心页面 -->
+        <div id="profile" class="page">
+            <div class="card">
+                <h2>个人中心</h2>
+                <div class="user-profile">
+                    <div class="profile-sidebar">
+                        <div class="profile-avatar">
+                            👤
+                        </div>
+                        <h3>张三</h3>
+                        <p>高级编辑</p>
+                    </div>
+                    <div class="profile-info">
+                        <div class="form-group">
+                            <label class="form-label">用户名</label>
+                            <input type="text" class="form-control" value="zhangsan" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-control" value="zhangsan@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">手机号</label>
+                            <input type="tel" class="form-control" value="13800138000">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">部门</label>
+                            <input type="text" class="form-control" value="新闻部" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">职位</label>
+                            <input type="text" class="form-control" value="高级编辑" readonly>
+                        </div>
+                        <button class="btn btn-primary">保存修改</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 显示选中的页面
+            document.getElementById(pageId).classList.add('active');
+            
+            // 更新导航栏激活状态
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function viewArticle(id) {
+            alert('查看稿件详情：' + id);
+        }
+
+        function submitArticle(event) {
+            event.preventDefault();
+            alert('稿件发布成功！');
+        }
+
+        function showNewArticleForm() {
+            switchPage('publish');
+        }
+    </script>
+</body>
+</html>
