@@ -68,7 +68,7 @@ function App() {
                             }
                         />
                         <Route path="/article/:id" element={<ArticleDetail />} />
-
+                        <Route path="/manuscripts/:id" element={<ArticleDetail />} />
                     </Routes>
                 </main>
             </div>

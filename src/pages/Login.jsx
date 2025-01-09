@@ -6,15 +6,15 @@ import '../styles/login.css';
 const Login = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    username: '',
-    password: '',
+    username: 'admin',
+    password: '1',
     role: 'editor' // 默认角色
   });
   const [error, setError] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value
     }));
@@ -25,27 +25,34 @@ const Login = () => {
     setError('');
 
     try {
-      const response = await axios.post('http://localhost:8081/api/user/login', {
-        username: formData.username,
-        password: formData.password
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axios.post(
+          'http://localhost:8081/api/user/login',
+          {
+            username: formData.username,
+            password: formData.password,
+            userId: formData.userId
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+      );
 
       if (response.data.code === 200) {
-        // 使用前端选择的角色，而不是后端返回的角色
-        const userData = {
+        const userData = response.data.data; // 后端返回的用户信息，包括 userId
+        const userInfo = {
           username: formData.username,
-          role: formData.role
+          role: formData.role,
+          userId: userData.userId // 假设返回的用户 ID 为 `id`
         };
 
         // 保存用户信息到 localStorage
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('user', JSON.stringify(userInfo));
         localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('username', userData.username);
-        localStorage.setItem('userRole', userData.role);
+        localStorage.setItem('username', userInfo.username);
+        localStorage.setItem('userRole', userInfo.role);
+        localStorage.setItem('userId', userInfo.userId); // 保存用户ID
 
         // 根据选择的角色跳转到不同页面
         switch (formData.role) {
@@ -121,7 +128,6 @@ const Login = () => {
               >
                 <option value="editor">编辑</option>
                 <option value="author">作者</option>
-                {/*<option value="reviewer">评审员</option>*/}
                 <option value="admin">管理员</option>
               </select>
             </div>
