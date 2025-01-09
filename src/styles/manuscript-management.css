@@ -1,5 +1,7 @@
 .manuscript-management {
-    padding: 24px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .page-header {
@@ -7,46 +9,49 @@
 }
 
 .page-header h2 {
-    font-size: 24px;
-    color: #1f1f1f;
+    margin: 0;
+    color: #333;
 }
 
 .filters-section {
     display: flex;
-    gap: 16px;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 24px;
-    flex-wrap: wrap;
+    gap: 16px;
 }
 
 .search-form {
-    flex: 1;
-    min-width: 280px;
     display: flex;
     gap: 8px;
+    flex: 1;
 }
 
 .search-input {
     flex: 1;
     padding: 8px 12px;
-    border: 1px solid #d9d9d9;
+    border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 14px;
 }
 
 .btn-search {
     padding: 8px 16px;
-    background: #1890ff;
+    background-color: #1890ff;
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
+.btn-search:hover {
+    background-color: #40a9ff;
+}
+
 .filter-select {
     padding: 8px 12px;
-    border: 1px solid #d9d9d9;
+    border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 14px;
     min-width: 120px;
 }
 
@@ -59,7 +64,7 @@
 .manuscript-card {
     background: white;
     border-radius: 8px;
-    padding: 20px;
+    padding: 16px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -71,120 +76,163 @@
 }
 
 .manuscript-title {
-    font-size: 18px;
-    color: #1f1f1f;
     margin: 0;
-}
-
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.status-pending {
-    background: #e6f7ff;
-    color: #1890ff;
-}
-
-.status-reviewing {
-    background: #fff7e6;
-    color: #fa8c16;
-}
-
-.status-revision {
-    background: #fff2e8;
-    color: #fa541c;
-}
-
-.status-accepted {
-    background: #f6ffed;
-    color: #52c41a;
-}
-
-.status-rejected {
-    background: #fff1f0;
-    color: #ff4d4f;
-}
-
-.status-published {
-    background: #f0f5ff;
-    color: #2f54eb;
+    font-size: 18px;
+    color: #333;
+    flex: 1;
+    margin-right: 16px;
 }
 
 .manuscript-info {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
     margin-bottom: 16px;
 }
 
 .info-row {
     display: flex;
     gap: 24px;
-    flex-wrap: wrap;
-    font-size: 14px;
     color: #666;
+    font-size: 14px;
 }
 
 .manuscript-actions {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: flex-end;
 }
 
 .btn-action {
-    padding: 6px 12px;
-    border: 1px solid #d9d9d9;
+    padding: 6px 16px;
+    border: none;
     border-radius: 4px;
-    background: white;
     cursor: pointer;
     font-size: 14px;
-    color: #666;
+    transition: opacity 0.2s;
 }
 
 .btn-action:hover {
-    border-color: #1890ff;
-    color: #1890ff;
+    opacity: 0.8;
+}
+
+.btn-approve {
+    background-color: #52c41a;
+    color: white;
+}
+
+.btn-reject {
+    background-color: #ff4d4f;
+    color: white;
 }
 
 .btn-publish {
-    background: #1890ff;
+    background-color: #1890ff;
     color: white;
-    border: none;
 }
 
-.btn-publish:hover {
-    background: #40a9ff;
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #fff7e6;
+    color: #fa8c16;
+}
+
+.status-reviewing {
+    background-color: #e6f7ff;
+    color: #1890ff;
+}
+
+.status-accepted {
+    background-color: #f6ffed;
+    color: #52c41a;
+}
+
+.status-rejected {
+    background-color: #fff1f0;
+    color: #f5222d;
+}
+
+.status-published {
+    background-color: #f9f0ff;
+    color: #722ed1;
 }
 
 .loading {
     text-align: center;
     padding: 40px;
     color: #666;
+    font-size: 16px;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .manuscript-management {
-        padding: 16px;
-    }
+/* 模态框样式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
 
-    .filters-section {
-        flex-direction: column;
-    }
+.modal-content {
+    background-color: white;
+    padding: 24px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
 
-    .info-row {
-        flex-direction: column;
-        gap: 8px;
-    }
+.modal-content h3 {
+    margin: 0 0 16px 0;
+    color: #333;
+}
 
-    .manuscript-actions {
-        flex-direction: column;
-    }
+.modal-content textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 16px;
+    resize: vertical;
+    min-height: 100px;
+    font-size: 14px;
+}
 
-    .btn-action {
-        width: 100%;
-    }
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-cancel {
+    padding: 8px 16px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.btn-confirm {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: #1890ff;
+    color: white;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background-color: #f5f5f5;
+}
+
+.btn-confirm:hover {
+    background-color: #40a9ff;
 }

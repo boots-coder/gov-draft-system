@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../styles/login.css';
 
 const Login = () => {
@@ -24,33 +25,55 @@ const Login = () => {
     setError('');
 
     try {
-      // 这里应该是实际的API调用
-      // const response = await loginApi(formData);
+      const response = await axios.post('http://localhost:8081/api/user/login', {
+        username: formData.username,
+        password: formData.password
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
 
-      // 模拟登录成功
-      localStorage.setItem('userRole', formData.role);
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('username', formData.username);
+      if (response.data.code === 200) {
+        // 使用前端选择的角色，而不是后端返回的角色
+        const userData = {
+          username: formData.username,
+          role: formData.role
+        };
 
-      // 根据角色跳转到不同页面
-      switch (formData.role) {
-        case 'admin':
-          navigate('/admin');
-          break;
-        case 'editor':
-          navigate('/manuscripts');
-          break;
-        case 'author':
-          navigate('/my-manuscripts');
-          break;
-        case 'reviewer':
-          navigate('/reviews');
-          break;
-        default:
-          navigate('/');
+        // 保存用户信息到 localStorage
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('username', userData.username);
+        localStorage.setItem('userRole', userData.role);
+
+        // 根据选择的角色跳转到不同页面
+        switch (formData.role) {
+          case 'admin':
+            navigate('/admin');
+            break;
+          case 'editor':
+            navigate('/manuscripts');
+            break;
+          case 'author':
+            navigate('/my-manuscripts');
+            break;
+          case 'reviewer':
+            navigate('/reviews');
+            break;
+          default:
+            navigate('/');
+        }
+      } else {
+        setError(response.data.msg || '登录失败，请检查用户名和密码');
       }
     } catch (err) {
-      setError('登录失败，请检查用户名和密码');
+      console.error('登录错误:', err);
+      if (err.response) {
+        setError(err.response.data.msg || '登录失败，请检查用户名和密码');
+      } else {
+        setError('登录失败，请检查网络连接或稍后重试');
+      }
     }
   };
 
@@ -98,7 +121,7 @@ const Login = () => {
               >
                 <option value="editor">编辑</option>
                 <option value="author">作者</option>
-                <option value="reviewer">评审员</option>
+                {/*<option value="reviewer">评审员</option>*/}
                 <option value="admin">管理员</option>
               </select>
             </div>

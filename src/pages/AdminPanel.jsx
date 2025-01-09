@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import '../styles/admin-panel.css';
 
 const AdminPanel = () => {
@@ -12,40 +13,36 @@ const AdminPanel = () => {
         reviewerCount: 3,
     });
     const [loading, setLoading] = useState(false);
-
-    // 模拟用户数据
-    const mockUsers = [
-        {
-            id: 1,
-            username: 'editor1',
-            role: 'editor',
-            status: 'active',
-            lastLogin: '2024-03-15 10:30:00',
-            createdAt: '2024-01-01',
-        },
-        {
-            id: 2,
-            username: 'author1',
-            role: 'author',
-            status: 'active',
-            lastLogin: '2024-03-14 15:20:00',
-            createdAt: '2024-01-02',
-        },
-        // 添加更多模拟数据...
-    ];
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [searchUsername, setSearchUsername] = useState('');
+    const [showAddUserModal, setShowAddUserModal] = useState(false);
+    const [newUser, setNewUser] = useState({
+        username: '',
+        password: '',
+        role: 'author',
+        permissions: ''
+    });
 
     useEffect(() => {
         if (activeTab === 'users') {
             fetchUsers();
         }
-    }, [activeTab]);
+    }, [activeTab, currentPage, pageSize, searchUsername]);
 
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            // 模拟API调用
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setUsers(mockUsers);
+            const response = await axios.get(`http://localhost:8081/api/user/page`, {
+                params: {
+                    current: currentPage,
+                    size: pageSize,
+                    username: searchUsername || undefined
+                }
+            });
+            if (response.data.code === 200) {
+                setUsers(response.data.data.records);
+            }
         } catch (error) {
             console.error('获取用户列表失败:', error);
         } finally {
@@ -53,15 +50,36 @@ const AdminPanel = () => {
         }
     };
 
-    const handleUserStatusChange = async (userId, newStatus) => {
+    const handleDeleteUser = async (userId) => {
+        if (window.confirm('确定要删除该用户吗？')) {
+            try {
+                const response = await axios.delete(`http://localhost:8081/api/user/${userId}`);
+                if (response.data.code === 200) {
+                    fetchUsers();
+                }
+            } catch (error) {
+                console.error('删除用户失败:', error);
+            }
+        }
+    };
+
+    const handleAddUserSubmit = async (e) => {
+        e.preventDefault();
         try {
-            // 模拟API调用
-            await new Promise(resolve => setTimeout(resolve, 500));
-            setUsers(users.map(user =>
-                user.id === userId ? { ...user, status: newStatus } : user
-            ));
+            const response = await axios.post(`http://localhost:8081/api/user`, newUser);
+            if (response.data.code === 200) {
+                setShowAddUserModal(false);
+                setNewUser({
+                    username: '',
+                    password: '',
+                    role: 'author',
+                    permissions: ''
+                });
+                fetchUsers();
+            }
         } catch (error) {
-            console.error('更新用户状态失败:', error);
+            console.error('添加用户失败:', error);
+            alert('添加用户失败: ' + error.response?.data?.msg || '未知错误');
         }
     };
 
@@ -74,7 +92,6 @@ const AdminPanel = () => {
 
     const saveSettings = async () => {
         try {
-            // 模拟API调用
             await new Promise(resolve => setTimeout(resolve, 500));
             alert('设置保存成功');
         } catch (error) {
@@ -82,11 +99,72 @@ const AdminPanel = () => {
         }
     };
 
+    const AddUserModal = () => (
+        <div className="modal">
+            <div className="modal-content">
+                <h3>添加新用户</h3>
+                <form onSubmit={handleAddUserSubmit}>
+                    <div className="form-group">
+                        <label>用户名</label>
+                        <input
+                            type="text"
+                            value={newUser.username}
+                            onChange={e => setNewUser({...newUser, username: e.target.value})}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>密码</label>
+                        <input
+                            type="password"
+                            value={newUser.password}
+                            onChange={e => setNewUser({...newUser, password: e.target.value})}
+                            required
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>角色</label>
+                        <select
+                            value={newUser.role}
+                            onChange={e => setNewUser({...newUser, role: e.target.value})}
+                        >
+                            <option value="author">作者</option>
+                            <option value="editor">编辑</option>
+                            <option value="reviewer">评审</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>权限</label>
+                        <input
+                            type="text"
+                            value={newUser.permissions}
+                            onChange={e => setNewUser({...newUser, permissions: e.target.value})}
+                            placeholder="输入权限信息"
+                        />
+                    </div>
+                    <div className="modal-buttons">
+                        <button type="submit">确认</button>
+                        <button type="button" onClick={() => setShowAddUserModal(false)}>取消</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+
     const renderUsersTab = () => (
         <div className="users-management">
             <div className="table-header">
                 <h3>用户管理</h3>
-                <button className="btn-add">添加用户</button>
+                <div className="search-box">
+                    <input
+                        type="text"
+                        placeholder="搜索用户名"
+                        value={searchUsername}
+                        onChange={(e) => setSearchUsername(e.target.value)}
+                    />
+                </div>
+                <button className="btn-add" onClick={() => setShowAddUserModal(true)}>添加用户</button>
             </div>
 
             {loading ? (
@@ -96,53 +174,60 @@ const AdminPanel = () => {
                     <table className="users-table">
                         <thead>
                         <tr>
+                            <th>用户ID</th>
                             <th>用户名</th>
                             <th>角色</th>
-                            <th>状态</th>
-                            <th>最后登录</th>
+                            <th>权限</th>
                             <th>创建时间</th>
                             <th>操作</th>
                         </tr>
                         </thead>
                         <tbody>
                         {users.map(user => (
-                            <tr key={user.id}>
+                            <tr key={user.userId}>
+                                <td>{user.userId}</td>
                                 <td>{user.username}</td>
                                 <td>
-                    <span className={`role-badge role-${user.role}`}>
-                      {user.role === 'editor' ? '编辑' :
-                          user.role === 'author' ? '作者' :
-                              user.role === 'reviewer' ? '评审' : '管理员'}
-                    </span>
+                                    <span className={`role-badge role-${user.role}`}>
+                                        {user.role === 'editor' ? '编辑' :
+                                            user.role === 'author' ? '作者' :
+                                                user.role === 'reviewer' ? '评审' : '管理员'}
+                                    </span>
                                 </td>
-                                <td>
-                    <span className={`status-badge status-${user.status}`}>
-                      {user.status === 'active' ? '正常' : '禁用'}
-                    </span>
-                                </td>
-                                <td>{user.lastLogin}</td>
+                                <td>{user.permissions}</td>
                                 <td>{user.createdAt}</td>
                                 <td>
                                     <div className="action-buttons">
                                         <button
-                                            className="btn-action"
-                                            onClick={() => handleUserStatusChange(
-                                                user.id,
-                                                user.status === 'active' ? 'disabled' : 'active'
-                                            )}
+                                            className="btn-action btn-danger"
+                                            onClick={() => handleDeleteUser(user.userId)}
                                         >
-                                            {user.status === 'active' ? '禁用' : '启用'}
+                                            删除
                                         </button>
-                                        <button className="btn-action">编辑</button>
-                                        <button className="btn-action btn-danger">删除</button>
                                     </div>
                                 </td>
                             </tr>
                         ))}
                         </tbody>
                     </table>
+                    <div className="pagination">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            上一页
+                        </button>
+                        <span>第 {currentPage} 页</span>
+                        <button
+                            onClick={() => setCurrentPage(prev => prev + 1)}
+                            disabled={users.length < pageSize}
+                        >
+                            下一页
+                        </button>
+                    </div>
                 </div>
             )}
+            {showAddUserModal && <AddUserModal />}
         </div>
     );
 

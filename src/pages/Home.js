@@ -298,30 +298,32 @@ const Home = () => {
             </div>
 
             {/* 快速入口 */}
-            <div className="quick-access-section">
-                <div className="section-header">
-                    <h2>快速入口</h2>
+            {/* 快速入口 */}
+            {localStorage.getItem('userRole') === 'author' && (
+                <div className="quick-access-section">
+                    <div className="section-header">
+                        <h2>快速入口</h2>
+                    </div>
+                    <div className="quick-access-grid">
+                        <div className="quick-access-card" onClick={() => navigate('/my-manuscripts')}>
+                            <i className="icon-manuscript"></i>
+                            <span>我的稿件</span>
+                        </div>
+                        <div className="quick-access-card" onClick={() => navigate('/drafts')}>
+                            <i className="icon-browse"></i>
+                            <span>浏览约稿</span>
+                        </div>
+                        <div className="quick-access-card" onClick={() => navigate('/profile')}>
+                            <i className="icon-profile"></i>
+                            <span>个人中心</span>
+                        </div>
+                        <div className="quick-access-card" onClick={() => navigate('/help')}>
+                            <i className="icon-help"></i>
+                            <span>帮助中心</span>
+                        </div>
+                    </div>
                 </div>
-                <div className="quick-access-grid">
-                    <div className="quick-access-card" onClick={() => navigate('/manuscripts')}>
-                        <i className="icon-manuscript"></i>
-                        <span>我的稿件</span>
-                    </div>
-                    <div className="quick-access-card" onClick={() => navigate('/drafts')}>
-                        <i className="icon-browse"></i>
-                        <span>浏览约稿</span>
-                    </div>
-                    <div className="quick-access-card" onClick={() => navigate('/profile')}>
-                        <i className="icon-profile"></i>
-                        <span>个人中心</span>
-                    </div>
-                    <div className="quick-access-card" onClick={() => navigate('/help')}>
-                        <i className="icon-help"></i>
-                        <span>帮助中心</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+            )}        </div>
     );
 };
 

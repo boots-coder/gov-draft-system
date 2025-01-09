@@ -9,6 +9,7 @@ import AdminPanel from './pages/AdminPanel';
 import ManuscriptManagement from './pages/ManuscriptManagement';
 import MyManuscripts from './pages/MyManuscripts';
 import DraftDetail from './pages/DraftDetail';
+import ArticleDetail from "./pages/ArticleDetail";
 
 function App() {
     return (
@@ -66,6 +67,8 @@ function App() {
                                 </PrivateRoute>
                             }
                         />
+                        <Route path="/article/:id" element={<ArticleDetail />} />
+
                     </Routes>
                 </main>
             </div>

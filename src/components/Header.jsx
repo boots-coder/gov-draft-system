@@ -1,15 +1,71 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import '../styles/header.css';
 
 const Header = () => {
     const navigate = useNavigate();
-    // 模拟用户登录状态
-    const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-    const [userRole, setUserRole] = React.useState('editor'); // 可能的值: admin, editor, author, reviewer
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userRole, setUserRole] = useState('');
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        // 检查本地存储中的登录状态
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+            setIsLoggedIn(true);
+            setUserRole(user.role);
+            setUsername(user.username);
+        }
+    }, []);
+
+    const handleLogin = async (loginUsername, loginPassword) => {
+        try {
+            const response = await axios.get('/api/login', {
+                params: {
+                    username: loginUsername,
+                    password: loginPassword
+                }
+            });
+
+            if (response.data.code === 200) {
+                const user = response.data.data;
+                setIsLoggedIn(true);
+                setUserRole(user.role);
+                setUsername(user.username);
+
+                // 存储用户信息到本地存储
+                localStorage.setItem('user', JSON.stringify(user));
+
+                // 根据角色导航到不同页面
+                switch (user.role) {
+                    case 'admin':
+                        navigate('/admin');
+                        break;
+                    case 'editor':
+                        navigate('/manuscripts');
+                        break;
+                    case 'author':
+                        navigate('/my-manuscripts');
+                        break;
+                    default:
+                        navigate('/');
+                }
+            } else {
+                alert(response.data.msg);
+            }
+        } catch (error) {
+            console.error('登录失败:', error);
+            alert('登录失败，请稍后重试');
+        }
+    };
 
     const handleLogout = () => {
         setIsLoggedIn(false);
+        setUserRole('');
+        setUsername('');
+        localStorage.removeItem('user');
         navigate('/login');
     };
 
@@ -37,7 +93,7 @@ const Header = () => {
                 <div className="user-actions">
                     {isLoggedIn ? (
                         <>
-                            <span className="username">用户名</span>
+                            <span className="username">{username}</span>
                             <button onClick={handleLogout} className="btn-logout">
                                 退出
                             </button>
