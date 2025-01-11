@@ -1,345 +1,223 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import axios from 'axios';
 import '../styles/draft-detail.css';
 
-const DraftDetail = () => {
-    const { id } = useParams();
-    const [draft, setDraft] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('info'); // info, content, reviews, history
+const API_PREFIX = 'http://localhost:8081/api';
 
-    // 模拟稿件详情数据
-    const mockDraft = {
-        id: 1,
-        title: '数字经济发展趋势分析报告',
-        draftId: 'DRAFT-2024-001',
-        author: '张三',
-        category: '政策研究',
-        status: 'reviewing',
-        submitDate: '2024-03-15',
-        deadline: '2024-04-15',
-        budget: 8000,
-        wordCount: 12000,
-        abstract: '本报告主要分析了数字经济发展现状、趋势及面临的挑战，并提出相关政策建议...',
-        keywords: ['数字经济', '政策研究', '发展趋势', '创新'],
-        content: `# 数字经济发展趋势分析报告
-
-## 一、引言
-数字经济作为新时代经济发展的重要引擎...
-
-## 二、数字经济发展现状
-2.1 整体规模
-2.2 产业结构
-2.3 区域分布
-
-## 三、发展趋势分析
-3.1 技术创新驱动
-3.2 产业融合加速
-3.3 数字化转型深化
-
-## 四、面临的挑战
-4.1 数据安全
-4.2 人才短缺
-4.3 区域发展不平衡
-
-## 五、政策建议
-5.1 完善政策体系
-5.2 加强人才培养
-5.3 促进协调发展
-
-## 六、结论
-...`,
-        reviews: [
-            {
-                id: 1,
-                reviewer: '审稿人A',
-                date: '2024-03-16',
-                status: 'completed',
-                score: {
-                    novelty: 8,
-                    quality: 9,
-                    relevance: 8,
-                    clarity: 7
-                },
-                comments: '整体内容详实，论述有力。建议在以下方面进行完善：\n1. 加强数据支撑\n2. 细化政策建议\n3. 补充国际比较',
-                decision: 'minor_revision'
-            },
-            {
-                id: 2,
-                reviewer: '审稿人B',
-                date: '2024-03-17',
-                status: 'completed',
-                score: {
-                    novelty: 7,
-                    quality: 8,
-                    relevance: 9,
-                    clarity: 8
-                },
-                comments: '研究视角新颖，分析深入。需要注意：\n1. 完善研究方法说明\n2. 加强政策可行性分析\n3. 更新部分数据',
-                decision: 'minor_revision'
-            }
-        ],
-        history: [
-            {
-                date: '2024-03-10',
-                action: 'created',
-                operator: '张三',
-                details: '创建稿件'
-            },
-            {
-                date: '2024-03-15',
-                action: 'submitted',
-                operator: '张三',
-                details: '提交审核'
-            },
-            {
-                date: '2024-03-15',
-                action: 'assigned_reviewer',
-                operator: '李编辑',
-                details: '分配审稿人'
-            },
-            {
-                date: '2024-03-16',
-                action: 'review_completed',
-                operator: '审稿人A',
-                details: '完成审稿'
-            },
-            {
-                date: '2024-03-17',
-                action: 'review_completed',
-                operator: '审稿人B',
-                details: '完成审稿'
-            }
-        ]
-    };
+const DraftListWithActions = () => {
+    const [drafts, setDrafts] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [pageInfo, setPageInfo] = useState({ current: 1, pageSize: 10, total: 0 });
+    const [formData, setFormData] = useState({
+        topic: '',
+        solicitorId: '',
+        deadline: '',
+    });
+    const [editDraftId, setEditDraftId] = useState(null); // 当前正在编辑的稿件 ID
+    const [isAdding, setIsAdding] = useState(false); // 是否处于新增模式
 
     useEffect(() => {
-        fetchDraftDetail();
-    }, [id]);
+        fetchPaginationData(pageInfo.current);
+    }, [pageInfo.current]);
 
-    const fetchDraftDetail = async () => {
+    // 分页查询约稿列表
+    const fetchPaginationData = async (page) => {
         setLoading(true);
         try {
-            // 模拟API调用
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            setDraft(mockDraft);
+            const response = await axios.get(`${API_PREFIX}/solicitation/page`, {
+                params: { current: page, size: pageInfo.pageSize },
+            });
+            if (response.data.code === 200) {
+                const data = response.data.data;
+                setDrafts(data.records);
+                setPageInfo({
+                    current: data.current,
+                    pageSize: data.size,
+                    total: data.total,
+                });
+            }
         } catch (error) {
-            console.error('获取稿件详情失败:', error);
+            console.error('分页查询失败:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const getStatusText = (status) => {
-        const statusMap = {
-            draft: '草稿',
-            submitted: '已提交',
-            reviewing: '审核中',
-            revision_needed: '需修改',
-            accepted: '已通过',
-            rejected: '已拒绝',
-            published: '已发布'
-        };
-        return statusMap[status] || status;
+    // 新增约稿
+    const handleCreate = async () => {
+        try {
+            const response = await axios.post(`${API_PREFIX}/solicitation`, formData);
+            alert(response.data.msg || '新增成功');
+            setIsAdding(false);
+            fetchPaginationData(1); // 刷新列表到第一页
+        } catch (error) {
+            console.error('新增失败:', error);
+            alert('新增失败');
+        }
     };
 
-    const getStatusClass = (status) => {
-        const classMap = {
-            draft: 'status-draft',
-            submitted: 'status-submitted',
-            reviewing: 'status-reviewing',
-            revision_needed: 'status-revision',
-            accepted: 'status-accepted',
-            rejected: 'status-rejected',
-            published: 'status-published'
-        };
-        return classMap[status] || '';
+    // 更新约稿
+    const handleUpdate = async () => {
+        try {
+            const response = await axios.put(`${API_PREFIX}/solicitation`, {
+                ...formData,
+                solicitationId: editDraftId,
+            });
+            alert(response.data.msg || '更新成功');
+            setEditDraftId(null);
+            fetchPaginationData(pageInfo.current);
+        } catch (error) {
+            console.error('更新失败:', error);
+            alert('更新失败');
+        }
     };
 
-    const renderInfo = () => (
-        <div className="draft-info-section">
-            <div className="info-group">
-                <div className="info-item">
-                    <span className="label">稿件编号：</span>
-                    <span>{draft.draftId}</span>
-                </div>
-                <div className="info-item">
-                    <span className="label">作者：</span>
-                    <span>{draft.author}</span>
-                </div>
-                <div className="info-item">
-                    <span className="label">类别：</span>
-                    <span>{draft.category}</span>
-                </div>
-            </div>
+    // 删除约稿
+    const handleDelete = async (id) => {
+        try {
+            const response = await axios.delete(`${API_PREFIX}/solicitation/${id}`);
+            alert(response.data.msg || '删除成功');
+            fetchPaginationData(pageInfo.current);
+        } catch (error) {
+            console.error('删除失败:', error);
+            alert('删除失败');
+        }
+    };
 
-            <div className="info-group">
-                <div className="info-item">
-                    <span className="label">提交日期：</span>
-                    <span>{draft.submitDate}</span>
-                </div>
-                <div className="info-item">
-                    <span className="label">截止日期：</span>
-                    <span>{draft.deadline}</span>
-                </div>
-                <div className="info-item">
-                    <span className="label">字数：</span>
-                    <span>{draft.wordCount}</span>
-                </div>
-            </div>
+    // 切换到编辑模式
+    const startEditing = (draft) => {
+        setEditDraftId(draft.solicitedPersonId);
+        setFormData({ topic: draft.topic, deadline: draft.deadline });
+    };
 
-            <div className="info-group">
-                <div className="info-item">
-                    <span className="label">预算：</span>
-                    <span>¥{draft.budget}</span>
-                </div>
-                <div className="info-item">
-                    <span className="label">关键词：</span>
-                    <div className="keywords">
-                        {draft.keywords.map((keyword, index) => (
-                            <span key={index} className="keyword">{keyword}</span>
-                        ))}
-                    </div>
-                </div>
-            </div>
-
-            <div className="abstract-section">
-                <h3>摘要</h3>
-                <p>{draft.abstract}</p>
-            </div>
+    // 渲染新增表单
+    const renderAddForm = () => (
+        <div className="add-form">
+            <h3>新增约稿</h3>
+            <label>
+                主题：
+                <input
+                    type="text"
+                    value={formData.topic}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, topic: e.target.value }))}
+                />
+            </label>
+            <label>
+                发起人 ID：
+                <input
+                    type="number"
+                    value={formData.solicitedPersonId}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, solicitorId: e.target.value }))}
+                />
+            </label>
+            <label>
+                截止日期：
+                <input
+                    type="date"
+                    value={formData.deadline}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, deadline: e.target.value }))}
+                />
+            </label>
+            <button onClick={handleCreate}>保存</button>
+            <button onClick={() => setIsAdding(false)}>取消</button>
         </div>
     );
 
-    const renderContent = () => (
-        <div className="draft-content-section">
-            <div className="content-wrapper">
-                {draft.content.split('\n').map((line, index) => (
-                    <div key={index} className="content-line">
-                        {line}
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-
-    const renderReviews = () => (
-        <div className="draft-reviews-section">
-            {draft.reviews.map(review => (
-                <div key={review.id} className="review-card">
-                    <div className="review-header">
-                        <div className="reviewer-info">
-                            <span className="reviewer-name">{review.reviewer}</span>
-                            <span className="review-date">{review.date}</span>
+    // 渲染约稿列表
+    const renderDraftList = () => (
+        <div className="draft-list">
+            {drafts.length > 0 ? (
+                drafts.map((draft) => (
+                    <div key={draft.solicitationId} className="draft-card">
+                        <div className="draft-info">
+                            <p><b>主题：</b>{draft.topic}</p>
+                            <p><b>提交时间：</b>{new Date(draft.solicitedAt).toLocaleString()}</p>
+                            <p><b>截止日期：</b>{draft.deadline}</p>
                         </div>
-                        <div className="review-decision">
-                            {review.decision === 'minor_revision' ? '建议小修' :
-                                review.decision === 'major_revision' ? '建议大修' :
-                                    review.decision === 'accept' ? '建议接受' : '建议拒绝'}
-                        </div>
-                    </div>
-
-                    <div className="review-scores">
-                        {Object.entries(review.score).map(([key, value]) => (
-                            <div key={key} className="score-item">
-                <span className="score-label">
-                  {key === 'novelty' ? '创新性' :
-                      key === 'quality' ? '质量' :
-                          key === 'relevance' ? '相关性' : '清晰度'}
-                </span>
-                                <div className="score-bar">
-                                    <div
-                                        className="score-value"
-                                        style={{ width: `${value * 10}%` }}
-                                    >
-                                        {value}
-                                    </div>
+                        <div className="draft-actions">
+                            {editDraftId === draft.solicitationId ? (
+                                <div className="edit-form">
+                                    <label>
+                                        主题：
+                                        <input
+                                            type="text"
+                                            value={formData.topic}
+                                            onChange={(e) =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    topic: e.target.value,
+                                                }))
+                                            }
+                                        />
+                                    </label>
+                                    <label>
+                                        截止日期：
+                                        <input
+                                            type="date"
+                                            value={formData.deadline}
+                                            onChange={(e) =>
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    deadline: e.target.value,
+                                                }))
+                                            }
+                                        />
+                                    </label>
+                                    <button onClick={handleUpdate}>保存</button>
+                                    <button onClick={() => setEditDraftId(null)}>取消</button>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="review-comments">
-                        <h4>审稿意见</h4>
-                        <pre className="comments-content">{review.comments}</pre>
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-
-    const renderHistory = () => (
-        <div className="draft-history-section">
-            <div className="timeline">
-                {draft.history.map((record, index) => (
-                    <div key={index} className="timeline-item">
-                        <div className="timeline-point" />
-                        <div className="timeline-content">
-                            <div className="timeline-header">
-                                <span className="timeline-date">{record.date}</span>
-                                <span className="timeline-operator">{record.operator}</span>
-                            </div>
-                            <div className="timeline-details">
-                                {record.details}
-                            </div>
+                            ) : (
+                                <>
+                                    <button onClick={() => startEditing(draft)}>编辑</button>
+                                    <button onClick={() => handleDelete(draft.solicitationId)}>删除</button>
+                                </>
+                            )}
                         </div>
                     </div>
-                ))}
-            </div>
+                ))
+            ) : (
+                <p>暂无约稿信息</p>
+            )}
         </div>
     );
 
-    if (loading) {
-        return <div className="loading">加载中...</div>;
-    }
+    // 渲染分页控件
+    const renderPaginationControls = () => (
+        <div className="pagination-controls">
+            <button
+                onClick={() => setPageInfo((prev) => ({ ...prev, current: prev.current - 1 }))}
+                disabled={pageInfo.current === 1}
+            >
+                上一页
+            </button>
+            <span>
+                第 {pageInfo.current} 页 / 共 {Math.ceil(pageInfo.total / pageInfo.pageSize)} 页
+            </span>
+            <button
+                onClick={() => setPageInfo((prev) => ({ ...prev, current: prev.current + 1 }))}
+                disabled={pageInfo.current === Math.ceil(pageInfo.total / pageInfo.pageSize)}
+            >
+                下一页
+            </button>
+        </div>
+    );
 
-    if (!draft) {
-        return <div className="error">稿件不存在</div>;
-    }
+    if (loading) return <div className="loading">加载中...</div>;
 
     return (
         <div className="draft-detail">
-            <div className="draft-header">
-                <h2>{draft.title}</h2>
-                <span className={`status-badge ${getStatusClass(draft.status)}`}>
-          {getStatusText(draft.status)}
-        </span>
-            </div>
-
-            <div className="tabs">
-                <button
-                    className={`tab-button ${activeTab === 'info' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('info')}
-                >
-                    基本信息
-                </button>
-                <button
-                    className={`tab-button ${activeTab === 'content' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('content')}
-                >
-                    稿件内容
-                </button>
-                <button
-                    className={`tab-button ${activeTab === 'reviews' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('reviews')}
-                >
-                    审稿意见
-                </button>
-                <button
-                    className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('history')}
-                >
-                    操作历史
-                </button>
-            </div>
-
-            <div className="tab-content">
-                {activeTab === 'info' && renderInfo()}
-                {activeTab === 'content' && renderContent()}
-                {activeTab === 'reviews' && renderReviews()}
-                {activeTab === 'history' && renderHistory()}
-            </div>
+            <h2>约稿列表</h2>
+            {!isAdding ? (
+                <>
+                    <button onClick={() => setIsAdding(true)}>新增约稿</button>
+                    {renderDraftList()}
+                    {renderPaginationControls()}
+                </>
+            ) : (
+                renderAddForm()
+            )}
         </div>
     );
 };
 
-export default DraftDetail;
+export default DraftListWithActions;

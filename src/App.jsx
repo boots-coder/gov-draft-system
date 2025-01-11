@@ -10,6 +10,7 @@ import ManuscriptManagement from './pages/ManuscriptManagement';
 import MyManuscripts from './pages/MyManuscripts';
 import DraftDetail from './pages/DraftDetail';
 import ArticleDetail from "./pages/ArticleDetail";
+import ArticleReview from "./pages/ArticleReview";
 
 function App() {
     return (
@@ -64,6 +65,14 @@ function App() {
                             element={
                                 <PrivateRoute>
                                     <MyManuscripts />
+                                </PrivateRoute>
+                            }
+                        />
+                        <Route
+                            path="/final-review"
+                            element={
+                                <PrivateRoute>
+                                    <ArticleReview /> {/* 路由到 ArticleReview 页面 */}
                                 </PrivateRoute>
                             }
                         />

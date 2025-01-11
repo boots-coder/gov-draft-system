@@ -66,7 +66,7 @@ const Login = () => {
             navigate('/my-manuscripts');
             break;
           case 'reviewer':
-            navigate('/reviews');
+            navigate('/final-review'); // 路由到“最终审核”页面
             break;
           default:
             navigate('/');
@@ -129,6 +129,7 @@ const Login = () => {
                 <option value="editor">编辑</option>
                 <option value="author">作者</option>
                 <option value="admin">管理员</option>
+                <option value="reviewer">审核员</option> {/* 添加审核员角色 */}
               </select>
             </div>
 

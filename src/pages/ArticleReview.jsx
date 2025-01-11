@@ -11,7 +11,7 @@ const api = axios.create({
     }
 });
 
-const ManuscriptManagement = () => {
+const ArticleReview = () => {
     const [manuscripts, setManuscripts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -35,7 +35,7 @@ const ManuscriptManagement = () => {
         const statusMap = {
             'PENDING': '待审核',
             'APPROVED': '已采纳',
-            // 'PUBLISHED': '已发布'
+            'PUBLISHED': '已发布'
         };
         return statusMap[status] || status;
     };
@@ -177,8 +177,8 @@ const ManuscriptManagement = () => {
                                     {manuscript.content?.substring(0, 50)}...
                                 </h3>
                                 <span className={`status-badge ${getStatusClass(manuscript.status)}`}>
-                                    {getStatusText(manuscript.status)}
-                                </span>
+                    {getStatusText(manuscript.status)}
+                </span>
                             </div>
 
                             <div className="manuscript-info">
@@ -189,28 +189,15 @@ const ManuscriptManagement = () => {
                             </div>
 
                             <div className="manuscript-actions">
+                                {/* 查看文章详情按钮 */}
                                 <button
                                     className="btn-action"
                                     onClick={() => window.location.href = `/article/${manuscript.articleId}`}
                                 >
                                     查看详情
                                 </button>
-                                {manuscript.status === '待审核' && (
-                                    <>
-                                        <button
-                                            className="btn-action btn-approve"
-                                            onClick={() => handleReviewClick(manuscript.articleId, '已采纳')}
-                                        >
-                                            采纳
-                                        </button>
-                                        <button
-                                            className="btn-action btn-reject"
-                                            onClick={() => handleReviewClick(manuscript.articleId, '拒绝')}
-                                        >
-                                            拒绝
-                                        </button>
-                                    </>
-                                )}
+
+                                {/* 发布按钮，仅在状态为已采纳时显示 */}
                                 {manuscript.status === '已采纳' && (
                                     <button
                                         className="btn-action btn-publish"
@@ -219,10 +206,10 @@ const ManuscriptManagement = () => {
                                         发布
                                     </button>
                                 )}
-                            </div>                        </div>
+                            </div>
+                        </div>
                     ))}
-                </div>
-            )}
+                </div>            )}
 
             {/* 审核模态框 */}
             {showReviewModal && (
@@ -259,4 +246,4 @@ const ManuscriptManagement = () => {
     );
 };
 
-export default ManuscriptManagement;
+export default ArticleReview;
