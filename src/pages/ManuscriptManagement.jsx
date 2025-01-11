@@ -211,14 +211,14 @@ const ManuscriptManagement = () => {
                                         </button>
                                     </>
                                 )}
-                                {manuscript.status === '已采纳' && (
-                                    <button
-                                        className="btn-action btn-publish"
-                                        onClick={() => handleReviewClick(manuscript.articleId, '已发布')}
-                                    >
-                                        发布
-                                    </button>
-                                )}
+                                {/*{manuscript.status === '已采纳' && (*/}
+                                {/*    <button*/}
+                                {/*        className="btn-action btn-publish"*/}
+                                {/*        onClick={() => handleReviewClick(manuscript.articleId, '已发布')}*/}
+                                {/*    >*/}
+                                {/*        发布*/}
+                                {/*    </button>*/}
+                                {/*)}*/}
                             </div>                        </div>
                     ))}
                 </div>
